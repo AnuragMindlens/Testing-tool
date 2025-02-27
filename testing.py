@@ -26,14 +26,15 @@ if st.button("Run API on Image"):
             # Debugging: Print raw response
             st.write("Raw Response:", response.text)
             
-            if response.status_code in [200, 201]:
+            if response.status_code in [200, 201]:  # Accept both 200 and 201
                 json_response = response.json()
                 st.session_state.history[image_url] = json_response
                 
+                st.image(image_url, caption="Processed Image", use_column_width=True)
                 st.json(json_response)
                 
-                # Editable JSON
-                edited_json = st.text_area("Edit JSON Response:", value=json.dumps(json_response, indent=2))
+                # Editable JSON with increased text area size
+                edited_json = st.text_area("Edit JSON Response:", value=json.dumps(json_response, indent=2), height=400)
                 
                 # Download button for edited JSON
                 st.download_button(
@@ -52,5 +53,5 @@ if st.button("Run API on Image"):
 # Sidebar toggle for viewing previous results
 selected_image = st.sidebar.selectbox("Select an image to view response:", list(st.session_state.history.keys()))
 if selected_image:
-    st.image(selected_image, caption="Selected Image")
+    st.image(selected_image, caption="Selected Image", use_column_width=True)
     st.json(st.session_state.history[selected_image])
