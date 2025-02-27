@@ -47,23 +47,27 @@ if st.button("Run API on Image"):
 
                 with col3:
                     st.subheader("Edit JSON Response")
-                    # Use session state to preserve edited JSON across refreshes
+
+                    # Ensure session state persists edits
                     edited_json = st.text_area("Edit here", value=st.session_state.edited_json, height=400, key="edit_text")
 
                     # Update session state with the edited JSON
                     st.session_state.edited_json = edited_json
 
-                    # Download button for edited JSON
-                    st.download_button(
-                        label="Download Edited JSON",
-                        data=edited_json.encode('utf-8'),
-                        file_name="edited_response.json",
-                        mime="application/json"
-                    )
+                    # Download button for edited JSON (Fix for Streamlit Cloud)
+                    if st.session_state.edited_json:
+                        st.download_button(
+                            label="Download Edited JSON",
+                            data=st.session_state.edited_json.encode('utf-8'),
+                            file_name="edited_response.json",
+                            mime="application/json"
+                        )
             else:
                 st.error(f"Failed to fetch API response. Status Code: {response.status_code}")
-        except Exception as e:
-            st.error(f"Error: {e}")
+        except requests.exceptions.RequestException as e:
+            st.error(f"API request failed: {e}")
+        except json.JSONDecodeError:
+            st.error("Failed to decode JSON response. API might have returned non-JSON data.")
     else:
         st.warning("Please enter both API URL and Image URL.")
 
@@ -81,16 +85,21 @@ if selected_image and selected_image != image_url:
 
     with col3:
         st.subheader("Edit JSON Response")
-        # Use session state to preserve edited JSON across refreshes
-        edited_json = st.text_area("Edit here", value=json.dumps(st.session_state.history[selected_image], indent=2), height=400, key="edit_text_history")
+
+        # Ensure session state persists edits for previous images
+        if "edited_json" not in st.session_state:
+            st.session_state.edited_json = json.dumps(st.session_state.history[selected_image], indent=2)
+
+        edited_json = st.text_area("Edit here", value=st.session_state.edited_json, height=400, key="edit_text_history")
 
         # Update session state with the edited JSON
         st.session_state.edited_json = edited_json
 
-        # Download button for edited JSON
-        st.download_button(
-            label="Download Edited JSON",
-            data=edited_json.encode('utf-8'),
-            file_name="edited_response.json",
-            mime="application/json"
-        )
+        # Download button for edited JSON (Fix for Streamlit Cloud)
+        if st.session_state.edited_json:
+            st.download_button(
+                label="Download Edited JSON",
+                data=st.session_state.edited_json.encode('utf-8'),
+                file_name="edited_response.json",
+                mime="application/json"
+            )
